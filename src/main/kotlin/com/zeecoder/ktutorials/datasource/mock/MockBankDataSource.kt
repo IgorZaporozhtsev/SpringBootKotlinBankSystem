@@ -14,5 +14,5 @@ class MockBankDataSource : BankDataSource {
             Bank(UUID.randomUUID().toString(), 3.0, 37)
     )
 
-    override fun getBanks(): Collection<Bank> = banks
+    override fun retrieveBanks(): Collection<Bank> = banks
 }
