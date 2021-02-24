@@ -2,7 +2,9 @@ package com.zeecoder.ktutorials.controller
 
 import com.ninjasquad.springmockk.MockkBean
 import com.zeecoder.ktutorials.datasource.BankDataSource
+import com.zeecoder.ktutorials.exceptions.BankException
 import com.zeecoder.ktutorials.model.Bank
+import com.zeecoder.ktutorials.util.ApiError
 import io.mockk.every
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -92,15 +94,22 @@ internal class BankControllerTest{
 
             //given
             val accountNumber = "555"
-            every { bankDataSource.retrieveBank(accountNumber) } throws NoSuchElementException()
+            every { bankDataSource.retrieveBank(accountNumber) } throws BankException("Could no find a bank with accountNumber: $accountNumber")
             //when
             val mvcResult = mockMvc.get("$baseUrl/$accountNumber")
 
             //then
+            val error = ApiError("Could no find a bank with accountNumber: $accountNumber")
+            //todo look through all exception flow carefully
             mvcResult
                     .andDo { print() }
                     .andExpect {
-                        status { isBadRequest() }
+                        status {
+                            isNotFound()
+                        }
+                        content {
+                            jsonPath("$.errorMessage") { value(error.errorMessage) }
+                        }
                     }
         }
     }

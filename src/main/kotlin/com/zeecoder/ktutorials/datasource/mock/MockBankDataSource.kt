@@ -1,8 +1,10 @@
 package com.zeecoder.ktutorials.datasource.mock
 
 import com.zeecoder.ktutorials.datasource.BankDataSource
+import com.zeecoder.ktutorials.exceptions.BankException
 import com.zeecoder.ktutorials.model.Bank
 import org.springframework.stereotype.Repository
+import kotlin.jvm.Throws
 
 @Repository
 class MockBankDataSource : BankDataSource {
@@ -15,7 +17,9 @@ class MockBankDataSource : BankDataSource {
 
     override fun retrieveBanks(): Collection<Bank> = banks
 
-    override fun retrieveBank(accountNumber: String): Bank =
+    @Throws(BankException::class)
+    override fun retrieveBank(accountNumber: String): Bank? =
         banks
-                .first { it.accountNumber == accountNumber}
+                .firstOrNull { it.accountNumber == accountNumber}
+        ?: throw BankException("Could no find a bank with accountNumber $accountNumber")
 }
