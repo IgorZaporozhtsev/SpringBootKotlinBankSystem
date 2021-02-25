@@ -11,11 +11,13 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("api/banks")
 class BankController(@Autowired private val service: BankService) {
 
-
-
     @GetMapping
     fun getBanks():Collection<Bank> = service.getBanks()
 
     @GetMapping("/{accountNumber}")
     fun getBankById(@PathVariable accountNumber: String): Bank? = service.getBank(accountNumber);
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    fun addBank(@RequestBody bank: Bank): Bank = service.addBank(bank)
 }

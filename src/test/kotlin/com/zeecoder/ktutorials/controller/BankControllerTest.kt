@@ -1,28 +1,33 @@
 package com.zeecoder.ktutorials.controller
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import com.zeecoder.ktutorials.datasource.BankDataSource
-import com.zeecoder.ktutorials.exceptions.BankException
+import com.zeecoder.ktutorials.exceptions.ApiBankException
 import com.zeecoder.ktutorials.model.Bank
-import com.zeecoder.ktutorials.util.ApiError
+import com.zeecoder.ktutorials.exceptions.ApiException
 import io.mockk.every
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.TestInstance.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.post
 
 @SpringBootTest
 @AutoConfigureMockMvc //need this in Spring Boot test
-internal class BankControllerTest{
+internal class BankControllerTest @Autowired constructor(
+        val mockMvc: MockMvc,
+        val objectMapper: ObjectMapper
+){
 
-    @Autowired
-    lateinit var mockMvc: MockMvc
+
 
     @MockkBean
     lateinit var bankDataSource: BankDataSource
@@ -33,7 +38,7 @@ internal class BankControllerTest{
 
     @Nested
     @DisplayName("getBanks()")
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    @TestInstance(Lifecycle.PER_CLASS)
     inner class GetBanks {
 
         @Test
@@ -65,7 +70,7 @@ internal class BankControllerTest{
 
     @Nested
     @DisplayName("getBankById()")
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    @TestInstance(Lifecycle.PER_CLASS)
     inner class GetBankById {
         @Test
         fun `should return the bank with given account number`(){
@@ -94,13 +99,13 @@ internal class BankControllerTest{
 
             //given
             val accountNumber = "555"
-            every { bankDataSource.retrieveBank(accountNumber) } throws BankException("Could no find a bank with accountNumber: $accountNumber")
+            every { bankDataSource.retrieveBank(accountNumber) } throws ApiBankException("from Test Could no find a bank with accountNumber: $accountNumber")
             //when
             val mvcResult = mockMvc.get("$baseUrl/$accountNumber")
 
             //then
-            val error = ApiError("Could no find a bank with accountNumber: $accountNumber")
-            //todo look through all exception flow carefully
+            val exception = ApiException("from Test Could no find a bank with accountNumber: $accountNumber")
+
             mvcResult
                     .andDo { print() }
                     .andExpect {
@@ -108,11 +113,63 @@ internal class BankControllerTest{
                             isNotFound()
                         }
                         content {
-                            jsonPath("$.errorMessage") { value(error.errorMessage) }
+                            jsonPath("$.errorMessage") { value(exception.errorMessage) }
                         }
                     }
         }
     }
     
+    @Nested
+    @DisplayName("addBank()")
+    @TestInstance(Lifecycle.PER_CLASS)
+    inner class PostNewBank{
+
+        @Test
+        fun `should add new bank`(){
+            //given
+            val newBank = Bank("444", "Sara's", 32.3, 23)
+            every { bankDataSource.createBank(newBank) } returns newBank
+            
+            //when
+            val performPost = mockMvc.post(baseUrl) {
+                contentType = MediaType.APPLICATION_JSON
+                content = objectMapper.writeValueAsString(newBank)
+            }
+
+            //then
+            performPost
+                    .andDo { print() }
+                    .andExpect {
+                        status { isCreated() }
+                        content { contentType(jsonMediaType) }
+                        jsonPath("$.accountNumber") {value("444")}
+                        jsonPath("$.accountName") {value("Sara's")}
+                        jsonPath("$.trust") {value("32.3")}
+                        jsonPath("$.transactionFee") {value("23")}
+                    }
+            
+        }
+        
+        @Test
+        fun `should return BAD REQUEST if bank with guven account already exist`(){
+            //given
+            val invalidBank = Bank("444", "Sara's", 32.3, 23)
+            every { bankDataSource.createBank(invalidBank) } throws ApiBankException(
+                    "bank with number ${invalidBank.accountNumber} already exists")
+            
+            //when
+            val performPost = mockMvc.post(baseUrl) {
+                contentType = MediaType.APPLICATION_JSON
+                content = objectMapper.writeValueAsString(invalidBank)
+            }
+            
+            //then
+            performPost
+                    .andDo { print() }
+                    .andExpect {
+                        status { isBadRequest() }
+                    }
+        }
+    }
 
 }
