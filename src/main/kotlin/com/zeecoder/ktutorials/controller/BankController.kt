@@ -20,4 +20,13 @@ class BankController(@Autowired private val service: BankService) {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     fun addBank(@RequestBody bank: Bank): Bank = service.addBank(bank)
+
+    @PatchMapping
+    fun changeBank(@RequestBody bank: Bank): Bank = service.changeBank(bank)
+
+    @PutMapping
+    fun updateBank(@RequestBody bank: Bank): Bank = service.updateBank(bank)
+
+    @DeleteMapping
+    fun deleteBank(@RequestBody bank: Bank): Bank = service.deleteBank(bank)
 }

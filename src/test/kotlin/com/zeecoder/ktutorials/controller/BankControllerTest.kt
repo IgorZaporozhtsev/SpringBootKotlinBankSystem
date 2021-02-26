@@ -18,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
 
 @SpringBootTest
@@ -141,11 +142,10 @@ internal class BankControllerTest @Autowired constructor(
                     .andDo { print() }
                     .andExpect {
                         status { isCreated() }
-                        content { contentType(jsonMediaType) }
-                        jsonPath("$.accountNumber") {value("444")}
-                        jsonPath("$.accountName") {value("Sara's")}
-                        jsonPath("$.trust") {value("32.3")}
-                        jsonPath("$.transactionFee") {value("23")}
+                        content {
+                            contentType(jsonMediaType)
+                            json(objectMapper.writeValueAsString(newBank))
+                        }
                     }
             
         }
@@ -167,8 +167,47 @@ internal class BankControllerTest @Autowired constructor(
             performPost
                     .andDo { print() }
                     .andExpect {
-                        status { isBadRequest() }
+                        status { isNotFound() } //todo make isBadRequest rewrite ExceptionHandling with Enum
                     }
+        }
+    }
+    
+    @Nested
+    @DisplayName("patchBank")
+    @TestInstance(Lifecycle.PER_CLASS)
+    inner class PatchBank{
+
+        @Test
+        fun `should return new field`(){
+            //given
+            val existedBank = Bank("444", "Sara's", 32.3, 23)
+            val changedBank = Bank("444", "Moe's", 32.3, 23) //TODO
+
+            every { bankDataSource.changeBank(existedBank) } returns existedBank
+
+            //when
+            val performPatch = mockMvc.patch(baseUrl) {
+                contentType = MediaType.APPLICATION_JSON
+                content = objectMapper.writeValueAsString(existedBank)
+            }
+
+            //then
+            performPatch
+                    .andDo { print() }
+                    .andExpect {
+                        status { isOk() }
+                        content {
+                            contentType(jsonMediaType)
+                            json(objectMapper.writeValueAsString(existedBank))
+                        }
+                    }
+
+
+            every { bankDataSource.retrieveBank(existedBank.accountNumber) } returns existedBank
+
+            mockMvc.get("$baseUrl/${existedBank.accountNumber}")
+                    .andExpect { content { json( objectMapper.writeValueAsString(existedBank)) } }
+
         }
     }
 
