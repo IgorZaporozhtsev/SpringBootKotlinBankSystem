@@ -15,6 +15,7 @@ import org.junit.jupiter.api.TestInstance.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
@@ -100,12 +101,12 @@ internal class BankControllerTest @Autowired constructor(
 
             //given
             val accountNumber = "555"
-            every { bankDataSource.retrieveBank(accountNumber) } throws ApiBankException("from Test Could no find a bank with accountNumber: $accountNumber")
+            every { bankDataSource.retrieveBank(accountNumber) } throws ApiBankException("from Test Could no find a bank with accountNumber: $accountNumber", "GEEX001")
             //when
             val mvcResult = mockMvc.get("$baseUrl/$accountNumber")
 
             //then
-            val exception = ApiException("from Test Could no find a bank with accountNumber: $accountNumber")
+            val exception = ApiException("User is not present. from Test Could no find a bank with accountNumber: $accountNumber")
 
             mvcResult
                     .andDo { print() }
@@ -155,7 +156,7 @@ internal class BankControllerTest @Autowired constructor(
             //given
             val invalidBank = Bank("444", "Sara's", 32.3, 23)
             every { bankDataSource.createBank(invalidBank) } throws ApiBankException(
-                    "bank with number ${invalidBank.accountNumber} already exists")
+                    "bank with number ${invalidBank.accountNumber} already exists", "GEEX002")
             
             //when
             val performPost = mockMvc.post(baseUrl) {
@@ -167,7 +168,7 @@ internal class BankControllerTest @Autowired constructor(
             performPost
                     .andDo { print() }
                     .andExpect {
-                        status { isNotFound() } //todo make isBadRequest rewrite ExceptionHandling with Enum
+                        status { isBadRequest() }
                     }
         }
     }

@@ -35,7 +35,7 @@ class MockBankDataSource : BankDataSource {
         return bank;
     }
 
-    override fun changeBank(bank: Bank): Bank {
+    override fun updateBank(bank: Bank): Bank {
         val currentBank = (banks
                 .firstOrNull { it.accountNumber == bank.accountNumber }
                 ?: throw ApiBankException("In Repo Could no find a bank with accountNumber ${bank.accountNumber}", "GEEX001"))
@@ -46,8 +46,7 @@ class MockBankDataSource : BankDataSource {
         return bank
     }
 
-
-    override fun updateBank(bank: Bank): Bank {
+    override fun changeBank(bank: Bank): Bank {
         TODO("Not yet implemented")
     }
 

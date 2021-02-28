@@ -6,7 +6,7 @@ import java.time.ZonedDateTime
 data class ApiException(
         private val _errorMessage: String?,
         val error: HttpStatus = HttpStatus.NOT_FOUND,
-        val exceptionCode: String,
+        val exceptionCode: String = "GEEX000",
         val timestamp: ZonedDateTime = ZonedDateTime.now(),
 ) {
     val errorMessage: String
