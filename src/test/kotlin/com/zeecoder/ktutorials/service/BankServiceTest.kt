@@ -1,7 +1,6 @@
 package com.zeecoder.ktutorials.service
 
 import com.zeecoder.ktutorials.datasource.BankDataSource
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
@@ -12,7 +11,7 @@ internal class BankServiceTest{
     //relaxed - true мы не используем given птому что нам не важно поведение given в методе every
     // relaxed - возвращает emptyList в нашем случае
 
-    private val bankService = BankService(dataSource)
+    private val bankService = BankServiceImpl(dataSource)
 
     @Test
     fun `should call its data source to retrieve banks`(){

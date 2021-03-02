@@ -3,9 +3,7 @@ package com.zeecoder.ktutorials.datasource.mock
 import com.zeecoder.ktutorials.datasource.BankDataSource
 import com.zeecoder.ktutorials.exceptions.ApiBankException
 import com.zeecoder.ktutorials.model.Bank
-import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Repository
-import java.lang.IllegalArgumentException
 import kotlin.jvm.Throws
 
 @Repository
@@ -20,7 +18,7 @@ class MockBankDataSource : BankDataSource {
     override fun retrieveBanks(): Collection<Bank> = banks
 
     @Throws(ApiBankException::class) //todo redundant?
-    override fun retrieveBank(accountNumber: String): Bank? =
+    override fun retrieveBank(accountNumber: String?): Bank? =
         banks
             .firstOrNull { it.accountNumber == accountNumber}
                 ?: throw ApiBankException("In Repo Could no find a bank with accountNumber $accountNumber", "GEEX001")
@@ -35,10 +33,25 @@ class MockBankDataSource : BankDataSource {
         return bank;
     }
 
-    override fun updateBank(bank: Bank): Bank {
+    override fun updateBank(accountNumber: String?, bank: Bank): Bank {
+
         val currentBank = (banks
-                .firstOrNull { it.accountNumber == bank.accountNumber }
-                ?: throw ApiBankException("In Repo Could no find a bank with accountNumber ${bank.accountNumber}", "GEEX001"))
+                .firstOrNull { it.accountNumber == accountNumber }
+                ?: throw ApiBankException("In Repo Could no find a bank with accountNumber $accountNumber", "GEEX001"))
+
+
+        if (bank.accountNumber == null) {
+            throw NoSuchElementException("accountNumber: ${bank.accountNumber} is not present")
+        }
+        if (bank.accountName == null) {
+            throw NoSuchElementException("accountName: ${bank.accountName} is not present")
+        }
+        if (bank.trust == 0.0) {
+            throw NoSuchElementException("trust: ${bank.trust} is not preset")
+        }
+        if (bank.transactionFee == 0) {
+            throw NoSuchElementException("transactionFee: ${bank.transactionFee} is not present")
+        }
 
         banks.remove(currentBank)
         banks.add(bank)
@@ -46,11 +59,19 @@ class MockBankDataSource : BankDataSource {
         return bank
     }
 
-    override fun changeBank(bank: Bank): Bank {
-        TODO("Not yet implemented")
+    override fun changeBank(accountNumber: String, bank: Bank): Bank {
+
+        val retrievedBank: Bank = banks.first { it.accountNumber == accountNumber }
+
+        if(bank.accountNumber != null) retrievedBank.accountNumber = bank.accountNumber
+        if( bank.accountName != null) retrievedBank.accountName = bank.accountName
+        if( bank.trust != 0.0) retrievedBank.trust = bank.trust
+        if(  bank.transactionFee != 0) retrievedBank.transactionFee = bank.transactionFee
+
+        return retrievedBank;
     }
 
-    override fun deleteBank(bank: Bank): Bank {
+    override fun deleteBank(accountNumber: String): Bank {
         TODO("Not yet implemented")
     }
 }

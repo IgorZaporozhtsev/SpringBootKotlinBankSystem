@@ -15,12 +15,8 @@ import org.junit.jupiter.api.TestInstance.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
-import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.get
-import org.springframework.test.web.servlet.patch
-import org.springframework.test.web.servlet.post
+import org.springframework.test.web.servlet.*
 
 @SpringBootTest
 @AutoConfigureMockMvc //need this in Spring Boot test
@@ -174,20 +170,19 @@ internal class BankControllerTest @Autowired constructor(
     }
     
     @Nested
-    @DisplayName("patchBank")
+    @DisplayName("updateBank")
     @TestInstance(Lifecycle.PER_CLASS)
-    inner class PatchBank{
+    inner class UpdateBank{
 
         @Test
-        fun `should return new field`(){
+        fun `should update an existing bank`(){
             //given
             val existedBank = Bank("444", "Sara's", 32.3, 23)
-            val changedBank = Bank("444", "Moe's", 32.3, 23) //TODO
 
-            every { bankDataSource.changeBank(existedBank) } returns existedBank
+            every { bankDataSource.updateBank(existedBank.accountNumber, existedBank) } returns existedBank
 
             //when
-            val performPatch = mockMvc.patch(baseUrl) {
+            val performPatch = mockMvc.put("$baseUrl/${existedBank.accountNumber}") {
                 contentType = MediaType.APPLICATION_JSON
                 content = objectMapper.writeValueAsString(existedBank)
             }
