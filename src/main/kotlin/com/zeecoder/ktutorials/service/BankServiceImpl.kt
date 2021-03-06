@@ -11,5 +11,5 @@ class BankServiceImpl(private val dataSource: BankDataSource) :BankService{
     override fun addBank(bank: Bank): Bank = dataSource.createBank(bank);
     override fun changeBank(accountNumber: String, bank: Bank): Bank = dataSource.changeBank(accountNumber, bank)
     override fun updateBank(accountNumber: String, bank: Bank): Bank = dataSource.updateBank(accountNumber, bank)
-    override fun deleteBank(accountNumber: String): Bank = dataSource.deleteBank(accountNumber)
+    override fun deleteBank(accountNumber: String): Unit = dataSource.deleteBank(accountNumber)
 }

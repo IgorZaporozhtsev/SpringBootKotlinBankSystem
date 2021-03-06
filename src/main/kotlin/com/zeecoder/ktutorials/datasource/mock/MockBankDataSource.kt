@@ -71,7 +71,10 @@ class MockBankDataSource : BankDataSource {
         return retrievedBank;
     }
 
-    override fun deleteBank(accountNumber: String): Bank {
-        TODO("Not yet implemented")
+    override fun deleteBank(accountNumber: String?): Unit {
+        val bank = (banks
+                .firstOrNull { it.accountNumber == accountNumber }
+                ?: throw ApiBankException("In Repo Could no find a bank with accountNumber $accountNumber", "GEEX001"))
+        banks.remove(bank);
     }
 }

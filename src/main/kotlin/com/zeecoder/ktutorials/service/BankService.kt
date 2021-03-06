@@ -8,5 +8,5 @@ interface BankService {
     fun addBank(bank: Bank): Bank
     fun changeBank(accountNumber: String, bank: Bank): Bank
     fun updateBank(accountNumber: String, bank: Bank): Bank
-    fun deleteBank(accountNumber: String): Bank
+    fun deleteBank(accountNumber: String): Unit
 }
